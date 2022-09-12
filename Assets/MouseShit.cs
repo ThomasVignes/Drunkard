@@ -18,10 +18,10 @@ public class MouseShit : MonoBehaviour
             RaycastHit[] hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), Mathf.Infinity, Player.GrabbableLayer);
             foreach (RaycastHit hit in hits)
             {
-                GrabObject Go = hit.collider.gameObject.GetComponent<GrabObject>();
+                Clickable Go = hit.collider.gameObject.GetComponent<Clickable>();
                 if (Go != null)
                 {
-                    Go.Grabbable = true;
+                    Go.Selected = true;
                 }
             }
         }

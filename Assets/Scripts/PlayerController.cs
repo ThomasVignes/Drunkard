@@ -5,9 +5,11 @@ using UnityEngine.Animations.Rigging;
 
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance;
     [Header("State Machine")]
     [SerializeField] private bool Moving;
     [SerializeField] private bool Grounded;
+    public bool CanMove;
     public bool Stumbling;
     public bool Drinking;
     [SerializeField] private GameObject GrabbedObject;
@@ -32,7 +34,7 @@ public class PlayerController : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform GrabSpot;
     [SerializeField] private GameObject Pivot;
-    [SerializeField] private GameObject Pelvis;
+    public GameObject Pelvis;
     [SerializeField] private RigBuilder Rig;
     [SerializeField] private GameObject Rsts;
     [SerializeField] private GameObject Compensators;
@@ -60,8 +62,10 @@ public class PlayerController : MonoBehaviour
     private Vector2 startTouchPos, endTouchPos;
 
     private float ZInput, XInput;
+
     void Awake()
     {
+        Instance = this;
         StartCoroutine(LegUpdateCoroutine());
     }
 
@@ -150,7 +154,7 @@ public class PlayerController : MonoBehaviour
                 if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended)
                 {
                     endTouchPos = Input.GetTouch(0).position;
-                    if (Vector2.Distance(startTouchPos, endTouchPos) > MinimumJumpSwipe)
+                    if (Vector2.Distance(startTouchPos, endTouchPos) > MinimumJumpSwipe && CanMove)
                     {
                         Vector2 jumpInput = (endTouchPos - startTouchPos).normalized;
 
@@ -159,9 +163,18 @@ public class PlayerController : MonoBehaviour
                         foreach (Rigidbody r in JumpingParts)
                         {
                             r.AddForce(Vector3.up * JumpForce);
-                            r.AddForce(jumpDir * JumpForce / 2);
+                            r.AddForce(jumpDir * JumpForce / 4);
                         }
                     }
+                }
+            }
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                foreach (Rigidbody r in JumpingParts)
+                {
+                    r.AddForce(Vector3.up * JumpForce);
+                    r.AddForce(Dir * JumpForce / 4);
                 }
             }
 
@@ -208,7 +221,7 @@ public class PlayerController : MonoBehaviour
 
         Dir = Vector3.Normalize(forward * ZInput + right * XInput);
 
-        if (Dir.magnitude >= 0.1f)
+        if (Dir.magnitude >= 0.1f && CanMove)
         {
             Moving = true;
 
@@ -261,9 +274,6 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-        
-
-        //Pelvis.transform.forward = offset * Dir;
     }
 
     public void CheckForGrabs()
@@ -282,27 +292,36 @@ public class PlayerController : MonoBehaviour
                     {
                         closestVector = itemVector;
 
-                        GrabObject go = Go.gameObject.GetComponent<GrabObject>();
+                        Clickable go = Go.gameObject.GetComponent<Clickable>();
                         if (go != null)
                         {
-                            if (go.Grabbable)
+                            if (go.Selected)
                             {
-                                GrabRefObject = go;
-                                GrabbedObject = GrabRefObject.Object;
-                                foreach (var rb in GrabRefObject.Rbs)
+                                if (go.gameObject.GetComponent<GrabObject>())
                                 {
-                                    rb.isKinematic = true;
-                                    rb.velocity = Vector3.zero;
-                                }
-                                foreach (var c in GrabRefObject.Cols)
-                                {
-                                    c.enabled = false;
-                                }
- 
-                                GrabbedObject.transform.position = GrabSpot.position;
-                                GrabbedObject.transform.rotation = GrabSpot.rotation;
-                                GrabbedObject.transform.parent = GrabSpot;
+                                    GrabRefObject = go.gameObject.GetComponent<GrabObject>();
+                                    GrabbedObject = GrabRefObject.Object;
+                                    foreach (var rb in GrabRefObject.Rbs)
+                                    {
+                                        rb.isKinematic = true;
+                                        rb.velocity = Vector3.zero;
+                                    }
+                                    foreach (var c in GrabRefObject.Cols)
+                                    {
+                                        c.enabled = false;
+                                    }
 
+                                    GrabbedObject.transform.position = GrabSpot.position;
+                                    GrabbedObject.transform.rotation = GrabSpot.rotation;
+                                    GrabbedObject.transform.parent = GrabSpot;
+                                }
+
+                                if (go.gameObject.GetComponent<CarClickCollider>())
+                                {
+                                    CarClickCollider Car = go.gameObject.GetComponent<CarClickCollider>();
+                                    CanMove = false;
+                                    Car.Sitting = true;
+                                }
                             }
                         }
                     }

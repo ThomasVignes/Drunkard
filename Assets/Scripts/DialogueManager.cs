@@ -27,11 +27,13 @@ public class DialogueManager : MonoBehaviour
 
     IEnumerator ShowText(string newText)
     {
+        PlayerController.Instance.CanMove = false;
         text.text = newText;
 
         yield return new WaitForSeconds(0.5f);
         canvas.SetActive(true);
         yield return new WaitForSeconds(2f);
         canvas.SetActive(false);
+        PlayerController.Instance.CanMove = true;
     }
 }

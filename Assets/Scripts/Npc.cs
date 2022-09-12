@@ -10,6 +10,7 @@ public class Npc : MonoBehaviour
 
     [SerializeField] private float TalkCD;
     private float talkTimer;
+    private bool Stop;
     
 
     bool DialogueOpen;
@@ -31,7 +32,7 @@ public class Npc : MonoBehaviour
     {
         if (collision.gameObject.layer == ToLayer(Player))
         {
-            if (Mathf.Abs(collision.relativeVelocity.magnitude) > 3 && talkTimer == 0)
+            if (Mathf.Abs(collision.relativeVelocity.magnitude) > 3 && talkTimer == 0 && !Stop)
             {
                 Talk();
                 talkTimer = TalkCD;
@@ -44,7 +45,7 @@ public class Npc : MonoBehaviour
         DialogueManager.Instance.ShowDialogue(dialogueLines[currentDialogue]);
 
         if (currentDialogue == dialogueLines.Count - 1)
-            currentDialogue = 0;
+            Stop = true;
         else
             currentDialogue++;
     }
