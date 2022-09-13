@@ -12,6 +12,7 @@ public class CarController : MonoBehaviour
     [SerializeField] private float RollSpeed;
     [SerializeField] private List<Transform> Wheels = new List<Transform>();
     [SerializeField] private Transform groundCheckForward, groundCheckBack;
+    [SerializeField] private GameObject Lights;
     
     Vector3 Dir, forward, right;
     float ZInput, XInput, Speed;
@@ -26,9 +27,13 @@ public class CarController : MonoBehaviour
     {
         InitializeMoveDir();
 
+        if (Lights.activeSelf != CanMove)
+            Lights.SetActive(CanMove);
+
         Grounded = Physics.CheckCapsule(groundCheckForward.position, groundCheckBack.position, 0.1f, WhatIsGround);
 
         Inputs();
+
 
         if (Moving && Grounded)
         {
